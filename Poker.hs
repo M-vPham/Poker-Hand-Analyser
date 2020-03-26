@@ -27,16 +27,12 @@ module Poker where
             let currentHand = (entireHand2 deck)  
             let currentList = map (\element -> fst(element)) currentHand 
             return currentList
-    --Only the suit 
-    suitHand1 deck = do
-            let currentHand = (entireHand1 deck)  
-            let currentList = map (\element -> snd(element)) currentHand 
-            show(currentList)
-    suitHand2 deck = do
-            let currentHand = (entireHand2 deck)  
-            let currentList = map (\element -> snd(element)) currentHand 
-            show(currentList)
     
+    {--CHECKING THE HANDS 
+        input: sorted hand  
+        output: priority ranging from (0-10) 
+    --}
+
     --OnePair: PRIORITY 2 
     isOnePair hand = do
         let uniqueHand = nub hand
@@ -63,10 +59,17 @@ module Poker where
     
     --Straight: PRIORITY 5 
     --     checkTuple = {elem(tupleChangedHand, 4), elem(tupleChangedHand, 3)+1, elem(tupleChangedHand, 2)+2, elem(tupleChangedHand, 1)+3, elem(tupleChangedHand, 0)+4}
+    isStraight hand = 5
 
-    --Flush: PRIORITY 6 
-    isFlush hand = do 
-        let uniqueSuit = nub hand 
+
+
+
+    --Flush: PRIORITY 6
+    --input should be the tuple hand instead of the normal hands so the "entireHand1 deck" 
+    isFlush tupleHand = do 
+        let sortedTuple = sort (tupleHand)  
+        let suitHand = map (\element -> snd(element)) sortedTuple 
+        let uniqueSuit = nub suitHand 
         if length uniqueSuit == 1 then 6 
         else 0 
 
@@ -90,6 +93,26 @@ module Poker where
         else 0
 
     --StraightFlush: PRIORITY 9 
+    --input must also be the tuple list 
     --Straight flag and flush flag 
+    isStraightFlush tupleHand = do 
+        let sortedTuple = sort (tupleHand)  
+        let handValue = map (\element -> fst(element)) sortedTuple
+        if (isFlush sortedTuple == 6)
+            then if (isStraight handValue == 5)
+                then 9
+            else 0
+        else 0
 
     --RoyalFLush: PRIORITY 10 
+    --input must also be the tuple list ugh 
+    --must be a flush and must be 10,11,12,13,1
+    isRoyalFlush tupleHand = do 
+        let sortedTuple = sort (tupleHand)  
+        let handValue = map (\element -> fst(element)) sortedTuple
+        if (isFlush sortedTuple == 6)
+            then 
+                case handValue of 
+                    [1,10,11,12,13] -> 10 
+                    _-> 0 
+        else 0
