@@ -29,7 +29,7 @@ module Poker where
             return currentList
     
     {--CHECKING THE HANDS 
-        input: sorted hand  
+        input: sorted hand, or tuple 
         output: priority ranging from (0-10) 
     --}
 
@@ -59,7 +59,20 @@ module Poker where
     
     --Straight: PRIORITY 5 
     --     checkTuple = {elem(tupleChangedHand, 4), elem(tupleChangedHand, 3)+1, elem(tupleChangedHand, 2)+2, elem(tupleChangedHand, 1)+3, elem(tupleChangedHand, 0)+4}
-    isStraight hand = 5
+    isStraight hand = do
+        --this case accounts for 1,10,11,12,13 and 1,2,3,4,5
+        let checkConsecutive = [hand !! 4, (hand !! 3) + 1, (hand !! 2) + 2, (hand !! 1) + 3, (hand !! 0) + 4] 
+        let lengthOfList = nub checkConsecutive
+        if (head hand == 1)
+            then 
+                case tail hand of
+                    [10,11,12,13] -> 5
+                    [2,3,4,5] -> 5
+                    _-> 0
+        else if (length lengthOfList == 1)
+            then 5 
+        else 0 
+            
 
 
 
