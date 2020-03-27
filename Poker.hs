@@ -5,7 +5,6 @@ module Poker where
     import Data.Unique
     --Type Declarations 
 
-
     organizedDeck = [(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(11,1),(12,1),(13,1),
                     (1,2),(2,2),(3,2),(4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(10,2),(11,2),(12,2),(13,2),
                     (1,3),(2,3),(3,3),(4,3),(5,3),(6,3),(7,3),(8,3),(9,3),(10,3),(11,3),(12,3),(13,3),
@@ -14,20 +13,28 @@ module Poker where
     getSuit tuple = snd tuple
     dealHand1 deck = [ organizedDeck !! ((snd x)-1) | x <- zip[1..10] deck, odd(fst x)]
     dealHand2 deck = [ organizedDeck !! ((snd x)-1) | x <- zip[1..10] deck, even(fst x)]
-    --Two hands, organized  
+    --Two hands, organized  (tuple)
     entireHand1 deck = sort (dealHand1 deck) 
     entireHand2 deck = sort (dealHand2 deck)
 
     --Only the card Value 
-    cardHand1 deck = do
-            let currentHand = (entireHand1 deck)  
-            let currentList = map (\element -> fst(element)) currentHand 
-            show(currentList)
-    cardHand2 deck = do 
-            let currentHand = (entireHand2 deck)  
-            let currentList = map (\element -> fst(element)) currentHand 
-            return currentList
-    
+    -- cardHand1 deck = do
+    --         let currentHand = (entireHand1 deck)  
+    --         let currentList = map (\element -> fst(element)) currentHand 
+    --         show(currentList)
+    -- cardHand2 deck = do 
+    --         let currentHand = (entireHand2 deck)  
+    --         let currentList = map (\element -> fst(element)) currentHand 
+    --         return currentList
+    cardHand1 deck = map (\element -> fst(element)) (entireHand1 deck)
+    cardHand2 deck = map (\element -> fst(element)) (entireHand2 deck)  
+
+
+
+            --Priorities 
+    priority1 = 0 
+    priority2 = 0 
+
     {--CHECKING THE HANDS 
         input: sorted hand, or tuple 
         output: priority ranging from (0-10) 
@@ -72,10 +79,6 @@ module Poker where
         else if (length lengthOfList == 1)
             then 5 
         else 0 
-            
-
-
-
 
     --Flush: PRIORITY 6
     --input should be the tuple hand instead of the normal hands so the "entireHand1 deck" 
@@ -107,7 +110,6 @@ module Poker where
 
     --StraightFlush: PRIORITY 9 
     --input must also be the tuple list 
-    --Straight flag and flush flag 
     isStraightFlush tupleHand = do 
         let sortedTuple = sort (tupleHand)  
         let handValue = map (\element -> fst(element)) sortedTuple
@@ -119,7 +121,6 @@ module Poker where
 
     --RoyalFLush: PRIORITY 10 
     --input must also be the tuple list ugh 
-    --must be a flush and must be 10,11,12,13,1
     isRoyalFlush tupleHand = do 
         let sortedTuple = sort (tupleHand)  
         let handValue = map (\element -> fst(element)) sortedTuple
@@ -129,3 +130,32 @@ module Poker where
                     [1,10,11,12,13] -> 10 
                     _-> 0 
         else 0
+
+    
+    checkPriority tupleValue handValue
+        | (isRoyalFlush tupleValue == 10) = 10
+        | (isStraightFlush tupleValue == 9) = 9
+        | (isFourOfAKind handValue == 8) = 8
+        | (isFullHouse handValue == 7) = 7
+        | (isFlush tupleValue == 6) = 6
+        | (isStraight handValue == 5) = 5
+        | (isThreeOfAKind handValue == 4) = 4
+        | (isTwoPair handValue == 3) = 3 
+        | (isOnePair handValue == 2) = 2
+        | otherwise = 1
+
+    deal deck = do 
+        -- TupleValue 
+        let tupleValue1 = entireHand1 deck
+        let tupleValue2 = entireHand2 deck 
+        -- CardValue
+        let cardValue1 = cardHand1 deck
+        let cardValue2 = cardHand2 deck 
+        -- assign Priorities 
+        let priority1 = checkPriority tupleValue1 cardValue1 
+        let priority2 = checkPriority tupleValue2 cardValue2 
+        show(priority1, priority2)
+
+
+
+   
