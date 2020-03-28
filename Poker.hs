@@ -371,30 +371,31 @@ module Poker where
         |(priority == 2) = onePairTieBreaker tuple1 tuple2
         |otherwise = highestCardTieBreaker tuple1 tuple2 
 
-    convertToActual handInteger deck = do 
-        if (handInteger == 1)
-            then [actualDeck !! ((snd x)-1) | x <- zip[1..10] deck, odd(fst x)]
-        else 
-            [actualDeck !! ((snd x)-1) | x <- zip[1..10] deck, even(fst x)]
+    --pass in the array of indices 
+    convertToActual winningTuple = map (actualDeck !!) (winningTuple)      
+
     --Deal function
     deal deck = do 
         -- TupleValue 
-        let tupleValue1 = entireHand1 deck
-        let tupleValue2 = entireHand2 deck 
+        let tupleValue1 = sort (entireHand1 deck)
+        let tupleValue2 = sort (entireHand2 deck) 
         -- CardValue
         let cardValue1 = cardHand1 deck
         let cardValue2 = cardHand2 deck 
         -- assign Priorities 
         let priority1 = checkPriority tupleValue1 cardValue1 
         let priority2 = checkPriority tupleValue2 cardValue2
+
+        let hand1Indices = (elemIndices (tupleValue1 !! 0) organizedDeck) ++(elemIndices (tupleValue1 !! 1) organizedDeck) ++(elemIndices (tupleValue1 !! 2) organizedDeck) ++(elemIndices (tupleValue1 !! 3) organizedDeck) ++(elemIndices (tupleValue1 !! 4) organizedDeck)
+        let hand2Indices = (elemIndices (tupleValue2 !! 0) organizedDeck) ++(elemIndices (tupleValue2 !! 1) organizedDeck) ++(elemIndices (tupleValue2 !! 2) organizedDeck) ++(elemIndices (tupleValue2 !! 3) organizedDeck) ++(elemIndices (tupleValue2 !! 4) organizedDeck)
         if (priority1 == priority2)
             --hand1 trumps hand  
             then if (checkTieBreaker tupleValue1 tupleValue2 priority1 == 1)
-                then convertToActual 1 deck
-            else convertToActual 2 deck
+                then convertToActual hand1Indices
+            else convertToActual hand2Indices
         else if (priority1 > priority2)
-            then convertToActual 1 deck
-        else convertToActual 2 deck
+            then convertToActual hand1Indices
+        else convertToActual hand2Indices
     
 
 
