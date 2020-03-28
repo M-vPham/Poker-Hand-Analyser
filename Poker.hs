@@ -9,6 +9,10 @@ module Poker where
                     (1,2),(2,2),(3,2),(4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(10,2),(11,2),(12,2),(13,2),
                     (1,3),(2,3),(3,3),(4,3),(5,3),(6,3),(7,3),(8,3),(9,3),(10,3),(11,3),(12,3),(13,3),
                     (1,4),(2,4),(3,4),(4,4),(5,4),(6,4),(7,4),(8,4),(9,4),(10,4),(11,4),(12,4),(13,4)]
+    actualDeck =    ["1C","2C","3C","4C","5C","6C","7C","8C","9C","10C","11C","12C","13C",
+                    "1D","2D","3D","4D","5D","6D","7D","8D","9D","10D","11D","12D","13D",
+                    "1H","2H","3H","4H","5H","6H","7H","8H","9H","10H","11H","12H","13H",
+                    "1S","2S","3S","4S","5S","6S","7S","8S","9S","10S","11S","12S","13S"]
     getValue tuple = fst tuple
     getSuit tuple = snd tuple
     dealHand1 deck = [ organizedDeck !! ((snd x)-1) | x <- zip[1..10] deck, odd(fst x)]
@@ -20,6 +24,8 @@ module Poker where
     --Only the card Value 
     cardHand1 deck = map (\element -> fst(element)) (entireHand1 deck)
     cardHand2 deck = map (\element -> fst(element)) (entireHand2 deck)  
+
+
 
     {--CHECKING THE HANDS 
         input: sorted hand, or tuple 
@@ -169,15 +175,18 @@ module Poker where
                 then 1
             else 2 
     {--
-        SuitBreaker 
+        SuitBreaker OnePair, Two Pair  
         input: tuple 
         output: tuple that is higher
     --}
     --
-    suitBreaker tuple1 tuple2 = do 
-        let handValue1 = map (\element -> fst(element)) (sort tuple1)
-        let handValue2 = map (\element -> fst(element)) (sort tuple2)
-        show(handValue1)
+    suitBreaker tuple1 tuple2 = do
+        let handValue1 = maximum(map (\element -> fst(element)) (sort tuple1))
+        let handValue2 = maximum(map (\element -> fst(element)) (sort tuple2))
+        if (handValue1 > handValue2)
+            then 1 
+        else 2
+        
 
          
 
@@ -196,9 +205,6 @@ module Poker where
         --does not include the pair 
         let noPair1 = (handValue1 \\comparePair1) \\ comparePair1
         let noPair2 = (handValue2 \\comparePair2) \\comparePair2
-        --suit of pair
-
-
 
         if (maxNum1 > maxNum2)
             then 1
@@ -220,21 +226,38 @@ module Poker where
         let handValue2 = map (\element -> fst(element)) (sort tuple2)
         let comparePair1 = handValue1 \\ (nub handValue1) 
         let comparePair2 = handValue2 \\ (nub handValue2)
+        --why do I intersect, i intersect to get rid of any common numbers. but that causes problems when I use maxNum
         let intersectList = (comparePair1 `intersect` comparePair2)
-        let maxNum1 = maximum(comparePair1 \\ intersectList)
-        let maxNum2 = maximum(comparePair2 \\ intersectList)
+        let maxNum1 = (comparePair1 !! 0)
+        let maxNum2 = (comparePair2 !! 0)
+        let maxNum1b = (comparePair1 !! 1)
+        let maxNum2b = (comparePair2 !! 1)
         --noPair 
         let noPair1 = (handValue1 \\comparePair1) \\ comparePair1
         let noPair2 = (handValue2 \\comparePair2) \\comparePair2
-
+        --onlyPair 
+        let maxIndex1 = elemIndices maxNum1 handValue1
+        let tupleList1 = [ sort tuple1 !! (maxIndex1 !! 0)] ++ [sort tuple1 !! (maxIndex1 !! 1)]
+        let maxIndex2 = elemIndices maxNum2 handValue2
+        let tupleList2 = [ sort tuple2 !! (maxIndex2 !! 0)] ++ [sort tuple2 !! (maxIndex2 !! 1)]
+        --if both pairs are the same then do the unique cards 
         if (comparePair1 == comparePair2)
+            --if the highestCards are the same, suitBreak with the tupleList of the pairs  
             then if (highestCardTieBreaker noPair1 noPair2 == -10)
-                then -1000000000 --dosuitBreaker on the pair 
+                then suitBreaker tupleList1 tupleList2 
+            --otherwise perform highcard 
             else 
-                highestCardTieBreaker noPair1 noPair2 
-        else if (maxNum1 > maxNum2)
-            then 1 
-        else 2
+                highestCardTieBreaker noPair1 noPair2
+        --check if the maximum number is bigger than the other
+        else if (maxNum1b > maxNum2b) then 1 
+        else if (maxNum2b > maxNum1b) then 2 
+        else if (maxNum1b == maxNum2b)
+            then if (maxNum1 > maxNum2)
+                then 1 
+            else 2
+        else -10
+
+
 
 
     {--
@@ -256,26 +279,32 @@ module Poker where
     {--
         straightTieBreaker/Flush
         input: tupleHand1, tupleHand2 
-        output: winning hand integer 
+        output: winning hand integer
+        do not have to worry about if both cases has an Ace* bc that would be royalFlush 
     --}
     straightTieBreaker tuple1 tuple2 = do 
         let handValue1 = map (\element -> fst(element)) (sort tuple1)
         let handValue2 = map (\element -> fst(element)) (sort tuple2)
         let maxNum1 = maximum(handValue1)
         let maxNum2 = maximum(handValue2)
+        --getting the tuple of the max Card 
+        let maxIndex1 = elemIndices maxNum1 handValue1
+        let tupleList1 = [ sort tuple1 !! (maxIndex1 !! 0)]
+        let maxIndex2 = elemIndices maxNum2 handValue2
+        let tupleList2 = [ sort tuple2 !! (maxIndex2 !! 0)]
         if (maxNum1 == maxNum2)
-            then -10 --SUITBREAKER, 1) both are high aces 2) same max 
+            then suitBreaker tupleList1 tupleList2 
         else if (maxNum1 > maxNum2)
             then 1 
         else 2
-    
+
 
     {--
         fullHouseTieBreaker 
         input: tupleHand1, tupleHand2 
         output: winning hand integer 
     --}
-    fullhouseTieBreaker tuple1 tuple2 = do 
+    fullHouseTieBreaker tuple1 tuple2 = do 
         let handValue1 = map (\element -> fst(element)) (sort tuple1)
         let handValue2 = map (\element -> fst(element)) (sort tuple2)
         let threeRepeat1 = maximum(filt handValue1 3) 
@@ -291,7 +320,7 @@ module Poker where
         input: tupleHand1, tupleHand2 
         output: winning hand integer 
     --}
-    fourOfAKind tuple1 tuple2 = do 
+    fourOfAKindTieBreaker tuple1 tuple2 = do 
         let handValue1 = map (\element -> fst(element)) (sort tuple1)
         let handValue2 = map (\element -> fst(element)) (sort tuple2)
         let threeRepeat1 = maximum(filt handValue1 4) 
@@ -329,6 +358,24 @@ module Poker where
     filt :: Show a => Num a => Read a => Eq a => Integral b => [a] -> b -> [a]
     filt a b = reverse $ uniq [] [i | i <- a, count i a >= b]
 
+
+    checkTieBreaker tuple1 tuple2 priority
+        |(priority == 10) = royalTieBreaker tuple1 tuple2
+        |(priority == 9) = straightTieBreaker tuple1 tuple2 
+        |(priority == 8) = fourOfAKindTieBreaker tuple1 tuple2 
+        |(priority == 7) = fullHouseTieBreaker tuple1 tuple2
+        |(priority == 6) = highestCardTieBreaker tuple1 tuple2 
+        |(priority == 5) = straightTieBreaker tuple1 tuple2 
+        |(priority == 4) = threeOfAKindTieBreaker tuple1 tuple2 
+        |(priority == 3) = twoPairTieBreaker tuple1 tuple2 
+        |(priority == 2) = onePairTieBreaker tuple1 tuple2
+        |otherwise = highestCardTieBreaker tuple1 tuple2 
+
+    convertToActual handInteger deck = do 
+        if (handInteger == 1)
+            then [actualDeck !! ((snd x)-1) | x <- zip[1..10] deck, odd(fst x)]
+        else 
+            [actualDeck !! ((snd x)-1) | x <- zip[1..10] deck, even(fst x)]
     --Deal function
     deal deck = do 
         -- TupleValue 
@@ -340,10 +387,14 @@ module Poker where
         -- assign Priorities 
         let priority1 = checkPriority tupleValue1 cardValue1 
         let priority2 = checkPriority tupleValue2 cardValue2
-        -- if (priority1 == priority2)
-        --     then highestCardTieBreaker tupleValue1 tupleValue2
-        -- else 0
-        show(tupleValue1)
+        if (priority1 == priority2)
+            --hand1 trumps hand  
+            then if (checkTieBreaker tupleValue1 tupleValue2 priority1 == 1)
+                then convertToActual 1 deck
+            else convertToActual 2 deck
+        else if (priority1 > priority2)
+            then convertToActual 1 deck
+        else convertToActual 2 deck
     
 
 
