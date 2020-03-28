@@ -3,6 +3,7 @@ module Poker where
     import Data.List
     import Data.Function
     import Data.Unique
+    import Data.Char
     --Type Declarations 
 
     organizedDeck = [(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(11,1),(12,1),(13,1),
@@ -52,9 +53,12 @@ module Poker where
         let uniqueHand = nub hand
         let duplicateHand = (hand \\ uniqueHand)
         --check if the duplicate hand is unique or not 
-        let uniqueDuplicateHand = nub duplicateHand 
-        if length uniqueDuplicateHand == 1 then 4 
+        let threeOfAKind = nub duplicateHand
+        if (length uniqueHand == 3 && length threeOfAKind == 1)
+            then 4 
         else 0 
+        -- if length uniqueDuplicateHand == 1 then 4 
+        -- else 0 
     
     --Straight: PRIORITY 5 
     --     checkTuple = {elem(tupleChangedHand, 4), elem(tupleChangedHand, 3)+1, elem(tupleChangedHand, 2)+2, elem(tupleChangedHand, 1)+3, elem(tupleChangedHand, 0)+4}
@@ -159,8 +163,7 @@ module Poker where
         let uniqueHandValue2 = handValue2 \\ intersectList
         let nextMax1 = maximum uniqueHandValue1
         let nextMax2 = maximum uniqueHandValue2 
-        -- show(hand1Max,hand2Max)
-        --Case1 
+        -- Case1 
         if (hand1Max > hand2Max)
             then
                 1 
@@ -181,8 +184,9 @@ module Poker where
     --}
     --
     suitBreaker tuple1 tuple2 = do
-        let handValue1 = maximum(map (\element -> fst(element)) (sort tuple1))
-        let handValue2 = maximum(map (\element -> fst(element)) (sort tuple2))
+        --recentlyhanged this to snd
+        let handValue1 = maximum(map (\element -> snd(element)) (sort tuple1))
+        let handValue2 = maximum(map (\element -> snd(element)) (sort tuple2))
         if (handValue1 > handValue2)
             then 1 
         else 2
@@ -205,14 +209,18 @@ module Poker where
         --does not include the pair 
         let noPair1 = (handValue1 \\comparePair1) \\ comparePair1
         let noPair2 = (handValue2 \\comparePair2) \\comparePair2
-
+        --only the pair
+        let maxIndex1 = elemIndices maxNum1 handValue1
+        let tupleList1 = [ sort tuple1 !! (maxIndex1 !! 0)] ++ [sort tuple1 !! (maxIndex1 !! 1)]
+        let maxIndex2 = elemIndices maxNum2 handValue2
+        let tupleList2 = [ sort tuple2 !! (maxIndex2 !! 0)] ++ [sort tuple2 !! (maxIndex2 !! 1)]
         if (maxNum1 > maxNum2)
             then 1
         else if (maxNum2 > maxNum1)
             then 2 
         else 
             if (highestCardTieBreaker noPair1 noPair2 == -10)
-                then -1000000000 --dosuitBreaker on the pair 
+                then suitBreaker tupleList1 tupleList2
             else 
                 highestCardTieBreaker noPair1 noPair2 
     
@@ -292,7 +300,15 @@ module Poker where
         let tupleList1 = [ sort tuple1 !! (maxIndex1 !! 0)]
         let maxIndex2 = elemIndices maxNum2 handValue2
         let tupleList2 = [ sort tuple2 !! (maxIndex2 !! 0)]
-        if (maxNum1 == maxNum2)
+        --does not account for both highAces, where you want to check the high Ace 
+        let aceSuitIndex1 = elemIndices 1 handValue1
+        let aceSuit1 = [sort tuple1 !! (aceSuitIndex1 !! 0)]
+        let aceSuitIndex2 = elemIndices 1 handValue2 
+        let aceSuit2 = [sort tuple2 !! (aceSuitIndex2 !! 0)]
+
+        if (maxNum1 == 13 && maxNum2 == 13)
+            then suitBreaker aceSuit1 aceSuit2
+        else if (maxNum1 == maxNum2)
             then suitBreaker tupleList1 tupleList2 
         else if (maxNum1 > maxNum2)
             then 1 
@@ -388,14 +404,15 @@ module Poker where
 
         let hand1Indices = (elemIndices (tupleValue1 !! 0) organizedDeck) ++(elemIndices (tupleValue1 !! 1) organizedDeck) ++(elemIndices (tupleValue1 !! 2) organizedDeck) ++(elemIndices (tupleValue1 !! 3) organizedDeck) ++(elemIndices (tupleValue1 !! 4) organizedDeck)
         let hand2Indices = (elemIndices (tupleValue2 !! 0) organizedDeck) ++(elemIndices (tupleValue2 !! 1) organizedDeck) ++(elemIndices (tupleValue2 !! 2) organizedDeck) ++(elemIndices (tupleValue2 !! 3) organizedDeck) ++(elemIndices (tupleValue2 !! 4) organizedDeck)
+        -- show(priority1, priority2)
         if (priority1 == priority2)
             --hand1 trumps hand  
             then if (checkTieBreaker tupleValue1 tupleValue2 priority1 == 1)
-                then convertToActual hand1Indices
-            else convertToActual hand2Indices
+                then (convertToActual hand1Indices)
+            else (convertToActual hand2Indices)
         else if (priority1 > priority2)
-            then convertToActual hand1Indices
-        else convertToActual hand2Indices
+            then (convertToActual hand1Indices)
+        else (convertToActual hand2Indices)
     
 
 
