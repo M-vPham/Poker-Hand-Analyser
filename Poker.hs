@@ -133,7 +133,7 @@ module Poker where
     {--
         HighestCard TieBreaker 
         Input: list of tuples only eg [(1,1)....(5,1)]
-        Output: the hand that wins eg [1,2,3,4,5]
+        Output: integer of the hand that wins eg 1 or 2 
         Case1: unique max numbers, 
         Case2: common max number, must go to the next one. (make sure that it applies to every iteration) 
         Case3: same hands completely, go to suit breaker
@@ -153,7 +153,7 @@ module Poker where
         let uniqueHandValue2 = handValue2 \\ intersectList
         let nextMax1 = maximum uniqueHandValue1
         let nextMax2 = maximum uniqueHandValue2 
-
+        -- show(hand1Max,hand2Max)
         --Case1 
         if (hand1Max > hand2Max)
             then
@@ -170,20 +170,15 @@ module Poker where
             else 2 
     {--
         SuitBreaker 
-        input: deck 
+        input: tuple 
         output: tuple that is higher
     --}
     --
     suitBreaker tuple1 tuple2 = do 
-        let tupleValue1 = sort (dealHand1 deck) 
-        let tupleValue2 = sort (dealHand2 deck)
-        let handValue1 = map (\element -> fst(element)) (tupleValue1)
-        let handValue2 = map (\element -> fst(element)) (tupleValue2)
-        let hand1Max = maximum handValue1 
-        let hand2Max = maximum handValue2
-        -- maxTuple THIS DOES NOT ACCOUNT FOR THE PAIR OF WHICH ONE IS A BETTER SUIT 
-        let maxTuple1 = snd(last tupleValue1)
-        let maxTuple2 = snd(last tupleValue2)  
+        let handValue1 = map (\element -> fst(element)) (sort tuple1)
+        let handValue2 = map (\element -> fst(element)) (sort tuple2)
+        show(handValue1)
+
          
 
     {--
@@ -198,12 +193,22 @@ module Poker where
         let comparePair2 = handValue2 \\ (nub handValue2)
         let maxNum1 = maximum(comparePair1)
         let maxNum2 = maximum(comparePair2)
+        --does not include the pair 
+        let noPair1 = (handValue1 \\comparePair1) \\ comparePair1
+        let noPair2 = (handValue2 \\comparePair2) \\comparePair2
+        --suit of pair
+
+
+
         if (maxNum1 > maxNum2)
             then 1
         else if (maxNum2 > maxNum1)
             then 2 
-        --since both max are the same, must go to highcard
-        else -10
+        else 
+            if (highestCardTieBreaker noPair1 noPair2 == -10)
+                then -1000000000 --dosuitBreaker on the pair 
+            else 
+                highestCardTieBreaker noPair1 noPair2 
     
     {--
         twoPair
@@ -218,12 +223,36 @@ module Poker where
         let intersectList = (comparePair1 `intersect` comparePair2)
         let maxNum1 = maximum(comparePair1 \\ intersectList)
         let maxNum2 = maximum(comparePair2 \\ intersectList)
+        --noPair 
+        let noPair1 = (handValue1 \\comparePair1) \\ comparePair1
+        let noPair2 = (handValue2 \\comparePair2) \\comparePair2
 
         if (comparePair1 == comparePair2)
-            then -10 --highCard
+            then if (highestCardTieBreaker noPair1 noPair2 == -10)
+                then -1000000000 --dosuitBreaker on the pair 
+            else 
+                highestCardTieBreaker noPair1 noPair2 
         else if (maxNum1 > maxNum2)
             then 1 
         else 2
+
+
+    {--
+        threeOfAKind check
+        input: tuple1, tupl2 
+        output number 
+    --}
+    threeOfAKindTieBreaker tuple1 tuple2 = do 
+        let handValue1 = map (\element -> fst(element)) (sort tuple1)
+        let handValue2 = map (\element -> fst(element)) (sort tuple2)
+        let comparePair1 = handValue1 \\ (nub handValue1) 
+        let comparePair2 = handValue2 \\ (nub handValue2)
+        let maxNum1 = maximum(comparePair1)
+        let maxNum2 = maximum(comparePair2)
+        if (maxNum1 > maxNum2)
+            then 1
+        else 2
+
     {--
         straightTieBreaker/Flush
         input: tupleHand1, tupleHand2 
@@ -235,7 +264,7 @@ module Poker where
         let maxNum1 = maximum(handValue1)
         let maxNum2 = maximum(handValue2)
         if (maxNum1 == maxNum2)
-            then -10 --two cases, 1) both are high aces 2) same max 
+            then -10 --SUITBREAKER, 1) both are high aces 2) same max 
         else if (maxNum1 > maxNum2)
             then 1 
         else 2
@@ -255,9 +284,7 @@ module Poker where
         let repeat2 = maximum(filt handValue2 2)
         if (threeRepeat1 > threeRepeat2)
             then 1 
-        else if (threeRepeat2 > threeRepeat1)
-            then 2 
-        else -10
+        else 2
 
     {--
         fourOfAKind 
@@ -271,9 +298,7 @@ module Poker where
         let threeRepeat2 = maximum(filt handValue2 4)
         if (threeRepeat1 > threeRepeat2)
             then 1 
-        else if (threeRepeat2 > threeRepeat1)
-            then 2 
-        else -10
+        else 2
 
     {--
         royalTieBreaker
